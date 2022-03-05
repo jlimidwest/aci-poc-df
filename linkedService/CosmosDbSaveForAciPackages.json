@@ -1,0 +1,11 @@
+{
+	"name": "CosmosDbSaveForAciPackages",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "CosmosDb",
+		"typeProperties": {
+			"connectionString": ""
+		}
+	}
+}

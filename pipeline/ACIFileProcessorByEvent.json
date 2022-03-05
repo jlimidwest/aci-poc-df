@@ -1,0 +1,175 @@
+{
+	"name": "ACIFileProcessorByEvent",
+	"properties": {
+		"activities": [
+			{
+				"name": "ProcessACIFileDataFlow",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "Set folder path",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set file name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "ProcessACIFileDataFlow",
+						"type": "DataFlowReference",
+						"parameters": {
+							"fileName": {
+								"value": "@variables('fileName')",
+								"type": "Expression"
+							},
+							"path": {
+								"value": "@variables('subPath')",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "Set folder path",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "subPath",
+					"value": {
+						"value": "@concat('\"',replace(pipeline().parameters.sourcePath,'aci-emboss-files/',''),'\"')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set file name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "fileName",
+					"value": {
+						"value": "@concat('\"',pipeline().parameters.sourceFileName,'\"')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Move and Delete File",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ProcessACIFileDataFlow",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": false,
+							"deleteFilesAfterCompletion": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "BinaryDataSource_File",
+						"type": "DatasetReference",
+						"parameters": {
+							"Container": "aci-emboss-files",
+							"Directory": {
+								"value": "@replace(variables('subPath'),'\"','')",
+								"type": "Expression"
+							},
+							"filename": {
+								"value": "@pipeline().parameters.sourceFileName",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "BinaryDataDestination",
+						"type": "DatasetReference",
+						"parameters": {
+							"Container": "aci-emboss-files",
+							"Directory": {
+								"value": "@concat('archived/',formatDateTime(pipeline().TriggerTime,'yyyyMM'))",
+								"type": "Expression"
+							},
+							"filename": {
+								"value": "@pipeline().parameters.sourceFileName",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"sourceFileName": {
+				"type": "string",
+				"defaultValue": "eg01.g179emao_000001"
+			},
+			"sourcePath": {
+				"type": "string",
+				"defaultValue": "aci-emboss-files/input"
+			}
+		},
+		"variables": {
+			"fileName": {
+				"type": "String"
+			},
+			"subPath": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-03-03T15:00:14Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

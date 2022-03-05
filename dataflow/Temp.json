@@ -1,0 +1,44 @@
+{
+	"name": "Temp",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AciRawFileLinkedService",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExternalCall1",
+					"linkedService": {
+						"referenceName": "RestService1",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"name": "DerivedColumn1"
+				},
+				{
+					"name": "Aggregate1"
+				},
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "Stringify1"
+				}
+			],
+			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tformat: 'delimited',\n\tcontainer: 'aci-emboss-files',\n\tfolderPath: 'input',\n\tfileName: 'part-00000-tid-1441723063601055617-34d61f24-f078-4f46-b1fa-df46e1646ae0-7-1-c000.csv',\n\tcolumnDelimiter: ',',\n\tescapeChar: '\\\\',\n\tquoteChar: '\\\"',\n\tcolumnNamesAsHeader: false,\n\tskipLines: 1,\n\tpartitionBy('roundRobin', 2)) ~> source1\nStringify1 call(mapColumn(\n\t\teach(match(true()))\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tallowSchemaDrift: true) ~> ExternalCall1\nsource1 derive(partition = partitionId(),\n\t\tpackageId = toString( byPosition(1)),\n\t\tpan = toString(byPosition(2))) ~> DerivedColumn1\nDerivedColumn1 aggregate(groupBy(partition),\n\tpanData = collect(@(packageId=packageId,pan =pan))) ~> Aggregate1\nAggregate1 select(mapColumn(\n\t\tpanData\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 stringify(panData = panData ? string,\n\tformat: 'json') ~> Stringify1\nAggregate1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tstore: 'cache',\n\tformat: 'inline',\n\toutput: false,\n\tsaveOrder: 1) ~> sink1"
+		}
+	}
+}

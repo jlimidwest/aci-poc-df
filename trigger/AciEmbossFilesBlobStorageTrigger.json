@@ -1,0 +1,17 @@
+{
+	"name": "AciEmbossFilesBlobStorageTrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/aci-emboss-files/blobs/2022/Feb/",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/fe60d06e-3a11-424c-a9ce-a8df254e4fd7/resourceGroups/SOFTWARE-DEV-SANDBOX-RESTRICTED-RG/providers/Microsoft.Storage/storageAccounts/gmaacipocstrageacct",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

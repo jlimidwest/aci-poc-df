@@ -1,0 +1,70 @@
+{
+	"name": "ProcessACIFileDataFlow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AciFilelinkedServiceV2",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SourceEmbossFiles"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "CosmosDbPushForAciPackagesV2",
+						"type": "DatasetReference"
+					},
+					"name": "SinkToAciPackagesBlobContainer"
+				},
+				{
+					"dataset": {
+						"referenceName": "CosmosDbSaveForPanTokenizer",
+						"type": "DatasetReference"
+					},
+					"name": "SinkToPanTokenizer"
+				}
+			],
+			"transformations": [
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "FilterOutStartAndEndRows"
+				},
+				{
+					"name": "DerivedColumnsFromAppDetail"
+				},
+				{
+					"name": "ApplicationSelect"
+				},
+				{
+					"name": "WithSurrogateKey"
+				},
+				{
+					"name": "ConditionalSplit1"
+				},
+				{
+					"name": "DerivedColumnsFromProductDetail"
+				},
+				{
+					"name": "ProductSelect"
+				},
+				{
+					"name": "JoinAppDataSetWithProductDataSet"
+				},
+				{
+					"name": "AlterRowForSink"
+				},
+				{
+					"name": "SelectedColumnsForTokenizer"
+				}
+			],
+			"script": "parameters{\n\tpath as string,\n\tfileName as string\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 5000000,\n\tignoreNoFilesFound: false,\n\tformat: 'delimited',\n\tcontainer: 'aci-emboss-files',\n\tfolderPath: ($path),\n\tfileName: ($fileName),\n\tcolumnDelimiter: ',',\n\tescapeChar: '\\\\',\n\tquoteChar: '\\\"',\n\tcolumnNamesAsHeader: false) ~> SourceEmbossFiles\nSourceEmbossFiles derive(ColumnOne = toString(byName('_col0_'))) ~> MapDrifted1\nMapDrifted1 filter(not(or(startsWith(ColumnOne,\"0000000000000000\"), startsWith(ColumnOne,\"9999999999999999\")))) ~> FilterOutStartAndEndRows\nConditionalSplit1@DeviceDetail derive(packageId = substring(ColumnOne, 1, 16),\n\t\tendDate = substring(ColumnOne, 51, 10),\n\t\tstartDate = substring(ColumnOne, 41, 10),\n\t\tissueReason = substring(ColumnOne, 61, 4),\n\t\tembossName = trim(substring(ColumnOne, 73, 30)),\n\t\tactivationMethod = substring(ColumnOne, 133, 4),\n\t\tid = substring(ColumnOne, 1, 16),\n\t\tcorpIndicator = substring(ColumnOne, 137, 1),\n\t\tcardFamilyName = trim(substring(ColumnOne, 138, 30)),\n\t\tcardFirstName = trim(substring(ColumnOne, 168, 30)),\n\t\tcardMiddleInitial = trim(substring(ColumnOne, 198, 4)),\n\t\tdateOfBirth = trim(substring(ColumnOne, 257, 10)),\n\t\tcustomerReferenceNumber = trim(substring(ColumnOne, 271, 20)),\n\t\taddrLine1 = trim(substring(ColumnOne, 291, 30)),\n\t\taddLine2 = trim(substring(ColumnOne, 321, 30)),\n\t\tcity = trim(substring(ColumnOne, 381, 30)),\n\t\tstate = trim(substring(ColumnOne, 411, 25)),\n\t\tcountry = trim(substring(ColumnOne, 436, 25)),\n\t\tpostCode = trim(substring(ColumnOne, 461, 10)),\n\t\tphoneNumber = trim(substring(ColumnOne, 471, 20)),\n\t\tfaxNumber = trim(substring(ColumnOne, 491, 20)),\n\t\temailAddress = trim(substring(ColumnOne, 511, 40)),\n\t\tcustomerVIPIndicator = trim(substring(ColumnOne, 551, 1)),\n\t\tdispatchMethodCode = trim(substring(ColumnOne, 552, 4)),\n\t\tinsertsCode = trim(substring(ColumnOne, 556, 4)),\n\t\tphotoIDNumber = trim(substring(ColumnOne, 560, 20)),\n\t\temployeeIDNumber = trim(substring(ColumnOne, 580, 20)),\n\t\tcompanyCostCenter = trim(substring(ColumnOne, 600, 15)),\n\t\tcompanyDeptName = trim(substring(ColumnOne, 615, 20)),\n\t\tcompanyLogoCode = trim(substring(ColumnOne, 635, 4)),\n\t\tcustomerPhotoIncluded = substring(ColumnOne, 639, 1),\n\t\tauthTokenRequired = substring(ColumnOne, 640, 1),\n\t\tcardPickupBranchCode = trim(substring(ColumnOne, 641, 4)),\n\t\tcardCarrierIDCode = trim(substring(ColumnOne, 645, 4)),\n\t\texternalStyleCode = trim(substring(ColumnOne, 649, 4)),\n\t\tpaymentDeviceId = trim(substring(ColumnOne, 653, 4)),\n\t\tfileOutputId = trim(substring(ColumnOne, 657, 4))) ~> DerivedColumnsFromAppDetail\nDerivedColumnsFromAppDetail select(mapColumn(\n\t\tpackageId,\n\t\tissueReason,\n\t\tembossName,\n\t\tactivationMethod,\n\t\tstartDate,\n\t\tendDate,\n\t\tid,\n\t\tcorpIndicator,\n\t\tcardFamilyName,\n\t\tcardFirstName,\n\t\tcardMiddleInitial,\n\t\tdateOfBirth,\n\t\tcustomerReferenceNumber,\n\t\taddrLine1,\n\t\taddLine2,\n\t\tcity,\n\t\tstate,\n\t\tcountry = postCode,\n\t\tphoneNumber,\n\t\tfaxNumber,\n\t\temailAddress,\n\t\tcustomerVIPIndicator,\n\t\tdispatchMethodCode,\n\t\tinsertsCode,\n\t\tphotoIDNumber,\n\t\temployeeIDNumber,\n\t\tcompanyCostCenter,\n\t\tcompanyCostCenter = companyDeptName,\n\t\tcompanyLogoCode,\n\t\tcustomerPhotoIncluded,\n\t\tauthTokenRequired,\n\t\tcardPickupBranchCode,\n\t\tcardCarrierIDCode,\n\t\texternalStyleCode,\n\t\tpaymentDeviceId,\n\t\tfileOutputId\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ApplicationSelect\nFilterOutStartAndEndRows keyGenerate(output(RowNum as long),\n\tstartAt: 1L) ~> WithSurrogateKey\nWithSurrogateKey split(mod(RowNum, 2)!=0,\n\tdisjoint: false) ~> ConditionalSplit1@(DeviceDetail, ApplicationDetail)\nConditionalSplit1@ApplicationDetail derive(packageId = substring(ColumnOne, 1, 16),\n\t\tpan = trim(substring(ColumnOne, 53, 28)),\n\t\taccountId = trim(substring(ColumnOne, 37, 16)),\n\t\tpin = trim(substring(ColumnOne, 120, 13)),\n\t\tcvv = trim(substring(ColumnOne, 138, 3)),\n\t\tcvv2 = trim(substring(ColumnOne, 141, 3)),\n\t\tpinStatus = trim(substring(ColumnOne, 144, 4)),\n\t\tcvvStatus = trim(substring(ColumnOne, 148, 4)),\n\t\tcvv2Status = trim(substring(ColumnOne, 152, 4)),\n\t\tpinDate = trim(substring(ColumnOne, 156, 10)),\n\t\tproductIdCode = trim(substring(ColumnOne, 170, 4)),\n\t\taccountReferenceNumber = trim(substring(ColumnOne, 605, 20))) ~> DerivedColumnsFromProductDetail\nDerivedColumnsFromProductDetail select(mapColumn(\n\t\tpackageId,\n\t\tpan,\n\t\taccountId,\n\t\tpin,\n\t\tcvv,\n\t\tcvv2,\n\t\tpinStatus,\n\t\tproductIdCode,\n\t\taccountReferenceNumber\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ProductSelect\nApplicationSelect, ProductSelect join(ApplicationSelect@packageId == ProductSelect@packageId,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinAppDataSetWithProductDataSet\nJoinAppDataSetWithProductDataSet alterRow(upsertIf(true())) ~> AlterRowForSink\nAlterRowForSink select(mapColumn(\n\t\tpackageId = ApplicationSelect@packageId,\n\t\tpan,\n\t\tid\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectedColumnsForTokenizer\nAlterRowForSink sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tformat: 'document',\n\tpartitionKey: ['/packageId'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('roundRobin', 4)) ~> SinkToAciPackagesBlobContainer\nSelectedColumnsForTokenizer sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:true,\n\tformat: 'document',\n\tpartitionKey: ['/packageId'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('roundRobin', 4)) ~> SinkToPanTokenizer"
+		}
+	}
+}

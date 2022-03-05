@@ -1,0 +1,11 @@
+{
+	"name": "AKVLinkedServiceForGMA",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://GMAKeyVault.vault.azure.net/"
+		}
+	}
+}

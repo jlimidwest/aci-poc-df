@@ -1,0 +1,24 @@
+{
+	"name": "embossFile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "pocBlobForEmbossFiles",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "em15.g179emdo_000007",
+				"folderPath": "archived",
+				"container": "emboss-container-archived"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

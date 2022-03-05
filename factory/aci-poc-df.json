@@ -1,0 +1,9 @@
+{
+	"name": "aci-poc-df",
+	"location": "westus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "3255bad1-316b-40c5-a1c9-b87688d52ee9",
+		"tenantId": "7f6bcd3a-7ec3-4e56-b0aa-c1b641c97749"
+	}
+}

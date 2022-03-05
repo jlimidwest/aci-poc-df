@@ -1,0 +1,28 @@
+{
+	"name": "AciEmbossFilesBlobStorageTriggerv2",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "ACIFileProcessorByEvent",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"sourceFileName": "@triggerBody().fileName",
+					"sourcePath": "@triggerBody().folderPath"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/aci-emboss-files/blobs/Pending",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/fe60d06e-3a11-424c-a9ce-a8df254e4fd7/resourceGroups/SOFTWARE-DEV-SANDBOX-RESTRICTED-RG/providers/Microsoft.Storage/storageAccounts/gmaacipocstrageacct",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

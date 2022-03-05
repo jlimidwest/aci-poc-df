@@ -1,0 +1,163 @@
+{
+	"name": "ACIFilesProcessorV2",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetACIFiles",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "AciFilesDataSet",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEachAciFile",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetACIFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetACIFiles').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "ProcessACIFilesDataFlow",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "ProcessACIFilesDataFlow",
+									"type": "DataFlowReference",
+									"datasetParameters": {
+										"SourceEmbossFiles": {
+											"EmbossFileName": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "Email Failure Run",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "ProcessACIFilesDataFlow",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": "https://retailapicbscardsaleauth.azurewebsites.net:443/api/EmailNotificationForAciFileProcessingStatus/triggers/manual/invoke?api-version=2020-05-01-preview&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=eyotCfFhadHfNT4VP3PIcVoX8AdGczmmO-GxRWQFUzA",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"DataFactoryName": "@{pipeline().DataFactory}",
+									"EmbossFileName": "@{item().name}",
+									"ErrorMessage": "@{activity('ProcessACIFilesDataFlow').output.Error.Message}",
+									"PipeLine": "@{pipeline().Pipeline}",
+									"RunId": "@{pipeline().RunId}",
+									"Status": "Failed"
+								}
+							}
+						},
+						{
+							"name": "Email Successful Run",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "ProcessACIFilesDataFlow",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": "https://retailapicbscardsaleauth.azurewebsites.net:443/api/EmailNotificationForAciFileProcessingStatus/triggers/manual/invoke?api-version=2020-05-01-preview&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=eyotCfFhadHfNT4VP3PIcVoX8AdGczmmO-GxRWQFUzA",
+								"method": "POST",
+								"headers": {
+									"Content-Type": "application/json"
+								},
+								"body": {
+									"DataFactoryName": "@{pipeline().DataFactory}",
+									"EmbossFileName": "@{item().name}",
+									"PipeLine": "@{pipeline().Pipeline}",
+									"RunId": "@{pipeline().RunId}",
+									"Status": "Successful"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-03-02T22:33:42Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

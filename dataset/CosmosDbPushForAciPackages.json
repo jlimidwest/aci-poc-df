@@ -1,0 +1,16 @@
+{
+	"name": "CosmosDbPushForAciPackages",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "CosmosDbSaveForAciPackages",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {},
+		"typeProperties": {
+			"collectionName": "AciPackages"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

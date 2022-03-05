@@ -1,0 +1,13 @@
+{
+	"name": "RestService1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://retailapi-func-dev.azurewebsites.net/api/TokenizePan?code=XY49JYoSFl7RRxVGy6ahdPaiHOWQ9tex3NCiBN9lN2RR8au4QHu7VA==",
+			"enableServerCertificateValidation": false,
+			"authenticationType": "Anonymous"
+		}
+	}
+}

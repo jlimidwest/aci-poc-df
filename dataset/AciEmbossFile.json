@@ -1,0 +1,33 @@
+{
+	"name": "AciEmbossFile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AciRawFilelinkedServiceV2",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"EmbossFileName": {
+				"type": "string",
+				"defaultValue": "em15.g179emdo_000007"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().EmbossFileName",
+					"type": "Expression"
+				},
+				"folderPath": "input",
+				"container": "aci-emboss-files"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,16 @@
+{
+	"name": "CosmosDbSaveForPanTokenizer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "CosmosDbSaveForAciPackagesV2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "CosmosDbSqlApiCollection",
+		"schema": {},
+		"typeProperties": {
+			"collectionName": "PanTokenizer"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
